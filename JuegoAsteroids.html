@@ -27,6 +27,26 @@
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     //          (x,y,ancho,alto)
+
+    
+    let naveX = canvas.width / 2;
+    let naveY = canvas.height / 2;
+
+    function dibujarNave(){
+      ctx.beginPath();
+
+      ctx.moveTo(naveX, naveY - 20);
+      ctx.lineTo(naveX - 15, naveY + 15);
+      ctx.lineTo(naveX + 15, naveY + 15); 
+
+      ctx.closePath();
+
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+    }
+
+    dibujarNave();
+
   </script>
 
 </body>
