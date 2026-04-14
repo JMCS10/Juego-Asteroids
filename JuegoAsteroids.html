@@ -24,28 +24,59 @@
     let canvas = document.getElementById("Canvas");
     let ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    //          (x,y,ancho,alto)
-
     
     let naveX = canvas.width / 2;
     let naveY = canvas.height / 2;
+    let naveAngulo = 0;
+
+    
+    let teclas = {};
+
+    document.addEventListener("keydown", function(e){
+      teclas[e.key] = true;
+    });
+
+    document.addEventListener("keyup", function(e){
+      teclas[e.key] = false;
+    });
 
     function dibujarNave(){
+      ctx.save();
+      ctx.translate(naveX, naveY);
+      ctx.rotate(naveAngulo);
+
       ctx.beginPath();
-
-      ctx.moveTo(naveX, naveY - 20);
-      ctx.lineTo(naveX - 15, naveY + 15);
-      ctx.lineTo(naveX + 15, naveY + 15); 
-
+      ctx.moveTo(0, -20);   
+      ctx.lineTo(-15, 15);  
+      ctx.lineTo(15, 15);   
       ctx.closePath();
 
       ctx.strokeStyle = "white";
       ctx.stroke();
+
+      ctx.restore();
     }
 
-    dibujarNave();
+    function actualizar(){
+      if (teclas["ArrowLeft"]){
+        naveAngulo -= 0.05;
+      }
+      if (teclas["ArrowRight"]){
+        naveAngulo += 0.05; 
+      }
+    }
+
+    function gameLoop(){
+      
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      
+      actualizar();
+      dibujarNave();
+    }
+
+    setInterval(gameLoop, 16);
 
   </script>
 
