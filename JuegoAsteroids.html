@@ -24,56 +24,116 @@
     let canvas = document.getElementById("Canvas");
     let ctx = canvas.getContext("2d");
 
-    
-    let naveX = canvas.width / 2;
-    let naveY = canvas.height / 2;
-    let naveAngulo = 0;
 
-    
-    let teclas = {};
+    let modelo ={
+      nave:{
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        angulo: 0
+      },
+      disparos: [],
+      teclas: {}
+    };
+
+
+
+    let vista ={
+
+      limpiarPantalla: function(){
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      },
+
+      dibujarNave: function(){
+        ctx.save();
+        ctx.translate(modelo.nave.x, modelo.nave.y);
+        ctx.rotate(modelo.nave.angulo);
+
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(-15, 15);
+        ctx.lineTo(15, 15);
+        ctx.closePath();
+
+        ctx.strokeStyle = "white";
+        ctx.stroke();
+
+        ctx.restore();
+      },
+
+      dibujarDisparos: function(){
+        for (let i = 0; i < modelo.disparos.length; i++){
+          ctx.beginPath();
+          ctx.arc(modelo.disparos[i].x, modelo.disparos[i].y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = "white";
+          ctx.fill();
+        }
+      }
+
+    };
+
+
+
+
+    let controlador ={
+
+      dispararBala: function(){
+        let bala = {
+          x: modelo.nave.x,
+          y: modelo.nave.y,
+          velocidadX: Math.sin(modelo.nave.angulo) * 5,
+          velocidadY: -Math.cos(modelo.nave.angulo) * 5
+        };
+        modelo.disparos.push(bala);
+      },
+
+      actualizarNave: function(){
+        if (modelo.teclas["ArrowLeft"]){
+          modelo.nave.angulo -= 0.05;
+        }
+        if (modelo.teclas["ArrowRight"]){
+          modelo.nave.angulo += 0.05;
+        }
+      },
+
+      actualizarDisparos: function(){
+        for (let i = 0; i < modelo.disparos.length; i++){
+          modelo.disparos[i].x += modelo.disparos[i].velocidadX;
+          modelo.disparos[i].y += modelo.disparos[i].velocidadY;
+        }
+
+        for (let i = modelo.disparos.length - 1; i >= 0; i--){
+          if (modelo.disparos[i].x < 0 || modelo.disparos[i].x > canvas.width ||
+              modelo.disparos[i].y < 0 || modelo.disparos[i].y > canvas.height) {
+            modelo.disparos.splice(i, 1);
+          }
+        }
+      }
+
+    };
+
+
+
 
     document.addEventListener("keydown", function(e){
-      teclas[e.key] = true;
+      modelo.teclas[e.key] = true;
+
+      if (e.key === " "){
+        controlador.dispararBala();
+      }
     });
 
     document.addEventListener("keyup", function(e){
-      teclas[e.key] = false;
+      modelo.teclas[e.key] = false;
     });
 
-    function dibujarNave(){
-      ctx.save();
-      ctx.translate(naveX, naveY);
-      ctx.rotate(naveAngulo);
-
-      ctx.beginPath();
-      ctx.moveTo(0, -20);   
-      ctx.lineTo(-15, 15);  
-      ctx.lineTo(15, 15);   
-      ctx.closePath();
-
-      ctx.strokeStyle = "white";
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function actualizar(){
-      if (teclas["ArrowLeft"]){
-        naveAngulo -= 0.05;
-      }
-      if (teclas["ArrowRight"]){
-        naveAngulo += 0.05; 
-      }
-    }
 
     function gameLoop(){
-      
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      
-      actualizar();
-      dibujarNave();
+      vista.limpiarPantalla();
+      controlador.actualizarNave();
+      controlador.actualizarDisparos();
+      vista.dibujarNave();
+      vista.dibujarDisparos();
     }
 
     setInterval(gameLoop, 16);
