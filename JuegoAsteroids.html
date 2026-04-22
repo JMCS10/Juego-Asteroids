@@ -32,7 +32,10 @@
         angulo: 0
       },
       disparos: [],
-      teclas: {}
+      asteroides: [],
+      teclas: {},
+      puntos: 0,
+      juegoActivo: true
     };
 
 
@@ -43,6 +46,7 @@
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       },
+
 
       dibujarNave: function(){
         ctx.save();
@@ -61,21 +65,149 @@
         ctx.restore();
       },
 
+
       dibujarDisparos: function(){
-        for (let i = 0; i < modelo.disparos.length; i++){
+        for(let i = 0; i < modelo.disparos.length; i++){
           ctx.beginPath();
           ctx.arc(modelo.disparos[i].x, modelo.disparos[i].y, 3, 0, Math.PI * 2);
           ctx.fillStyle = "white";
           ctx.fill();
         }
+      },
+
+
+      dibujarAsteroides: function(){
+        for(let i = 0; i < modelo.asteroides.length; i++){
+          ctx.beginPath();
+          ctx.arc(modelo.asteroides[i].x, modelo.asteroides[i].y, modelo.asteroides[i].radio, 0, Math.PI * 2);
+          ctx.strokeStyle = "white";
+          ctx.stroke();
+        }
+      },
+
+
+      dibujarPuntos: function(){
+        ctx.fillStyle = "white";
+        ctx.font = "18px Arial";
+        ctx.fillText("Puntos: " + modelo.puntos, 10, 25);
+      },
+
+
+      dibujarGameOver: function(){
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  
+        ctx.fillStyle = "white";
+        ctx.font = "48px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+
+
+        ctx.font = "24px Arial";
+        ctx.fillText("Puntos: " + modelo.puntos, canvas.width / 2, canvas.height / 2 + 20);
+
+
+        ctx.font = "16px Arial";
+        ctx.fillText("Presiona R para reiniciar", canvas.width / 2, canvas.height / 2 + 60);
+
+        ctx.textAlign = "left";
       }
 
     };
 
 
-
-
+    
     let controlador ={
+
+      crearAsteroide: function(){
+        let lado = Math.floor(Math.random() * 4);
+        let x, y;
+
+        if(lado === 0){
+          x = Math.random() * canvas.width;
+          y = 0;
+        }else if(lado === 1){
+          x = Math.random() * canvas.width;
+          y = canvas.height;
+        }else if(lado === 2){
+          x = 0;
+          y = Math.random() * canvas.height;
+        }else{
+          x = canvas.width;
+          y = Math.random() * canvas.height;
+        }
+
+        let asteroide ={
+          x: x,
+          y: y,
+          radio: 20 + Math.random() * 20,
+          velocidadX: (Math.random() - 0.5) * 2,
+          velocidadY: (Math.random() - 0.5) * 2
+        };
+
+        modelo.asteroides.push(asteroide);
+      },
+
+
+      actualizarAsteroides: function(){
+        for(let i = 0; i < modelo.asteroides.length; i++){
+          modelo.asteroides[i].x += modelo.asteroides[i].velocidadX;
+          modelo.asteroides[i].y += modelo.asteroides[i].velocidadY;
+        }
+
+        for(let i = modelo.asteroides.length - 1; i >= 0; i--){
+          if(modelo.asteroides[i].x < -50 || modelo.asteroides[i].x > canvas.width + 50 ||
+              modelo.asteroides[i].y < -50 || modelo.asteroides[i].y > canvas.height + 50) {
+            modelo.asteroides.splice(i, 1);
+          }
+        }
+      },
+
+
+      detectarColisiones: function(){
+        //entre bala y asteroide
+        for(let i = modelo.disparos.length - 1; i >= 0; i--){
+          for(let j = modelo.asteroides.length - 1; j >= 0; j--){
+            let distancia = Math.sqrt(
+              Math.pow(modelo.disparos[i].x - modelo.asteroides[j].x, 2) +
+              Math.pow(modelo.disparos[i].y - modelo.asteroides[j].y, 2)
+            );
+
+            if(distancia < modelo.asteroides[j].radio){
+              modelo.disparos.splice(i, 1);
+              modelo.asteroides.splice(j, 1);
+              modelo.puntos++;
+              break;
+            }
+          }
+        }
+
+        //entre nave y asteroide
+        for(let j = modelo.asteroides.length - 1; j >= 0; j--){
+          let distancia = Math.sqrt(
+            Math.pow(modelo.nave.x - modelo.asteroides[j].x, 2) +
+            Math.pow(modelo.nave.y - modelo.asteroides[j].y, 2)
+          );
+
+          if(distancia < modelo.asteroides[j].radio + 15){
+            modelo.juegoActivo = false;
+          }
+        }
+      },
+
+
+      reiniciarJuego: function(){
+        modelo.nave.x = canvas.width / 2;
+        modelo.nave.y = canvas.height / 2;
+        modelo.nave.angulo = 0;
+        modelo.disparos = [];
+        modelo.asteroides = [];
+        modelo.puntos = 0;
+        modelo.juegoActivo = true;
+      },
+
 
       dispararBala: function(){
         let bala = {
@@ -87,23 +219,25 @@
         modelo.disparos.push(bala);
       },
 
+
       actualizarNave: function(){
-        if (modelo.teclas["ArrowLeft"]){
+        if(modelo.teclas["ArrowLeft"]){
           modelo.nave.angulo -= 0.05;
         }
-        if (modelo.teclas["ArrowRight"]){
+        if(modelo.teclas["ArrowRight"]){
           modelo.nave.angulo += 0.05;
         }
       },
 
+
       actualizarDisparos: function(){
-        for (let i = 0; i < modelo.disparos.length; i++){
+        for(let i = 0; i < modelo.disparos.length; i++){
           modelo.disparos[i].x += modelo.disparos[i].velocidadX;
           modelo.disparos[i].y += modelo.disparos[i].velocidadY;
         }
 
-        for (let i = modelo.disparos.length - 1; i >= 0; i--){
-          if (modelo.disparos[i].x < 0 || modelo.disparos[i].x > canvas.width ||
+        for(let i = modelo.disparos.length - 1; i >= 0; i--){
+          if(modelo.disparos[i].x < 0 || modelo.disparos[i].x > canvas.width ||
               modelo.disparos[i].y < 0 || modelo.disparos[i].y > canvas.height) {
             modelo.disparos.splice(i, 1);
           }
@@ -114,12 +248,16 @@
 
 
 
-
     document.addEventListener("keydown", function(e){
       modelo.teclas[e.key] = true;
 
-      if (e.key === " "){
+      if(e.key === " " && modelo.juegoActivo){
         controlador.dispararBala();
+      }
+
+  
+      if(e.key === "r" || e.key === "R"){
+        controlador.reiniciarJuego();
       }
     });
 
@@ -128,12 +266,27 @@
     });
 
 
+    setInterval(function(){
+      if(modelo.juegoActivo){
+        controlador.crearAsteroide();
+      }
+    }, 3000);
+
+    
     function gameLoop(){
-      vista.limpiarPantalla();
-      controlador.actualizarNave();
-      controlador.actualizarDisparos();
-      vista.dibujarNave();
-      vista.dibujarDisparos();
+      if(modelo.juegoActivo){
+        vista.limpiarPantalla();
+        controlador.actualizarNave();
+        controlador.actualizarDisparos();
+        controlador.actualizarAsteroides();
+        controlador.detectarColisiones();
+        vista.dibujarNave();
+        vista.dibujarDisparos();
+        vista.dibujarAsteroides();
+        vista.dibujarPuntos();
+      }else{
+        vista.dibujarGameOver();
+      }
     }
 
     setInterval(gameLoop, 16);
