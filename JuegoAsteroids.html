@@ -24,7 +24,6 @@
     let canvas = document.getElementById("Canvas");
     let ctx = canvas.getContext("2d");
 
-
     let modelo ={
       nave:{
         x: canvas.width / 2,
@@ -35,16 +34,34 @@
       asteroides: [],
       teclas: {},
       puntos: 0,
-      juegoActivo: true
+      juegoActivo: true,
+      pantallaInicio: true 
     };
 
 
 
     let vista ={
-
       limpiarPantalla: function(){
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+      },
+
+      dibujarPantallaInicio: function(){
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "white";
+        ctx.font = "52px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("ASTEROIDS", canvas.width / 2, canvas.height / 2 - 40);
+
+        ctx.fillStyle = "white";
+        ctx.fillRect(175, canvas.height / 2, 150, 45);
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("INICIAR", canvas.width / 2, canvas.height / 2 + 30);
+
+        ctx.textAlign = "left";
       },
 
 
@@ -64,7 +81,6 @@
 
         ctx.restore();
       },
-
 
       dibujarDisparos: function(){
         for(let i = 0; i < modelo.disparos.length; i++){
@@ -98,17 +114,13 @@
         ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  
         ctx.fillStyle = "white";
         ctx.font = "48px Arial";
         ctx.textAlign = "center";
         ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
 
-
         ctx.font = "24px Arial";
         ctx.fillText("Puntos: " + modelo.puntos, canvas.width / 2, canvas.height / 2 + 20);
-
-
         ctx.font = "16px Arial";
         ctx.fillText("Presiona R para reiniciar", canvas.width / 2, canvas.height / 2 + 60);
 
@@ -118,9 +130,9 @@
     };
 
 
+
     
     let controlador ={
-
       crearAsteroide: function(){
         let lado = Math.floor(Math.random() * 4);
         let x, y;
@@ -156,7 +168,6 @@
           modelo.asteroides[i].x += modelo.asteroides[i].velocidadX;
           modelo.asteroides[i].y += modelo.asteroides[i].velocidadY;
         }
-
         for(let i = modelo.asteroides.length - 1; i >= 0; i--){
           if(modelo.asteroides[i].x < -50 || modelo.asteroides[i].x > canvas.width + 50 ||
               modelo.asteroides[i].y < -50 || modelo.asteroides[i].y > canvas.height + 50) {
@@ -167,13 +178,10 @@
 
 
       detectarColisiones: function(){
-        //entre bala y asteroide
+        //entre la bala y asteroidee
         for(let i = modelo.disparos.length - 1; i >= 0; i--){
           for(let j = modelo.asteroides.length - 1; j >= 0; j--){
-            let distancia = Math.sqrt(
-              Math.pow(modelo.disparos[i].x - modelo.asteroides[j].x, 2) +
-              Math.pow(modelo.disparos[i].y - modelo.asteroides[j].y, 2)
-            );
+            let distancia = Math.sqrt(Math.pow(modelo.disparos[i].x - modelo.asteroides[j].x, 2) + Math.pow(modelo.disparos[i].y - modelo.asteroides[j].y, 2));
 
             if(distancia < modelo.asteroides[j].radio){
               modelo.disparos.splice(i, 1);
@@ -183,20 +191,15 @@
             }
           }
         }
-
-        //entre nave y asteroide
+        //entre la nave y asteroide
         for(let j = modelo.asteroides.length - 1; j >= 0; j--){
-          let distancia = Math.sqrt(
-            Math.pow(modelo.nave.x - modelo.asteroides[j].x, 2) +
-            Math.pow(modelo.nave.y - modelo.asteroides[j].y, 2)
-          );
+          let distancia = Math.sqrt(Math.pow(modelo.nave.x - modelo.asteroides[j].x, 2) + Math.pow(modelo.nave.y - modelo.asteroides[j].y, 2));
 
           if(distancia < modelo.asteroides[j].radio + 15){
             modelo.juegoActivo = false;
           }
         }
       },
-
 
       reiniciarJuego: function(){
         modelo.nave.x = canvas.width / 2;
@@ -206,8 +209,8 @@
         modelo.asteroides = [];
         modelo.puntos = 0;
         modelo.juegoActivo = true;
+        modelo.pantallaInicio = false;
       },
-
 
       dispararBala: function(){
         let bala = {
@@ -238,13 +241,14 @@
 
         for(let i = modelo.disparos.length - 1; i >= 0; i--){
           if(modelo.disparos[i].x < 0 || modelo.disparos[i].x > canvas.width ||
-              modelo.disparos[i].y < 0 || modelo.disparos[i].y > canvas.height) {
+              modelo.disparos[i].y < 0 || modelo.disparos[i].y > canvas.height){
             modelo.disparos.splice(i, 1);
           }
         }
       }
 
     };
+
 
 
 
@@ -255,7 +259,6 @@
         controlador.dispararBala();
       }
 
-  
       if(e.key === "r" || e.key === "R"){
         controlador.reiniciarJuego();
       }
@@ -265,6 +268,17 @@
       modelo.teclas[e.key] = false;
     });
 
+    canvas.addEventListener("click", function(e){
+      let rect = canvas.getBoundingClientRect();
+      let clickX = e.clientX - rect.left;
+      let clickY = e.clientY - rect.top;
+
+      if(modelo.pantallaInicio && clickX > 175 && clickX < 325 && clickY > canvas.height / 2 && clickY < canvas.height / 2 + 45){
+        controlador.reiniciarJuego();
+      }
+    });
+
+
 
     setInterval(function(){
       if(modelo.juegoActivo){
@@ -273,8 +287,12 @@
     }, 3000);
 
     
+    
+
     function gameLoop(){
-      if(modelo.juegoActivo){
+      if(modelo.pantallaInicio){
+        vista.dibujarPantallaInicio();
+      }else if(modelo.juegoActivo){
         vista.limpiarPantalla();
         controlador.actualizarNave();
         controlador.actualizarDisparos();
@@ -290,8 +308,6 @@
     }
 
     setInterval(gameLoop, 16);
-
   </script>
-
 </body>
 </html>
