@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador QPACK</title>
+
+<style>
+body {
+    font-family: Arial;
+    padding: 20px;
+    background: #f4f4f4;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+}
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.resultado {
+    background: white;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Simulador QPACK</h1>
+
+<p>Ingresa headers (uno por línea):</p>
+
+<textarea id="entrada">
+:method GET
+:path /
+user-agent: chrome
+content-type: text/html
+user-agent: chrome
+</textarea>
+
+<br>
+<button onclick="comprimir()">Comprimir</button>
+
+<div class="resultado">
+<h3>Tabla estática</h3>
+<div id="tablaEstatica"></div>
+</div>
+
+<div class="resultado">
+<h3>Tabla dinámica</h3>
+<div id="tablaDinamica"></div>
+</div>
+
+<div class="resultado">
+<h3>Resultado comprimido</h3>
+<div id="salida"></div>
+</div>
+
+<script>
+let tablaEstatica = [
+    ":authority",
+    ":path /",
+    "age: 0",
+    "cookie",
+    ":method GET",
+    ":method PUT",
+    "content-type",
+    "user-agent"
+];
+
+function comprimir(){
+    let textoEntrada = document.getElementById("entrada").value;
+    let listaEncabezados = textoEntrada.split("\n");
+
+    let tablaDinamica = [];
+    let resultadoCompresion = [];
+
+    for(let i = 0; i < listaEncabezados.length; i++){
+        let encabezadoActual = listaEncabezados[i].trim();
+        if(encabezadoActual === "") continue;
+
+        let posE = tablaEstatica.indexOf(encabezadoActual);
+
+        if(posE !== -1){
+            resultadoCompresion.push("Estática → índice " + (posE + 1));
+            continue;
+        }
+
+        let posD = tablaDinamica.indexOf(encabezadoActual);
+
+        if (posD !== -1){
+            resultadoCompresion.push("Dinámica → índice " + (posD + 1));
+        }else{
+            tablaDinamica.push(encabezadoActual);
+            resultadoCompresion.push("Nuevo → " + encabezadoActual);
+        }
+    }
+
+    
+
+    let contenidoTablaEstatica = "";
+    for(let i = 0; i < tablaEstatica.length; i++){
+        contenidoTablaEstatica += (i + 1) + " → " + tablaEstatica[i] + "<br>";
+    }
+    document.getElementById("tablaEstatica").innerHTML = contenidoTablaEstatica;
+
+    let contenidoTablaDinamica = "";
+    for(let i = 0; i < tablaDinamica.length; i++){
+        contenidoTablaDinamica += (i + 1) + " → " + tablaDinamica[i] + "<br>";
+    }
+    document.getElementById("tablaDinamica").innerHTML = contenidoTablaDinamica;
+
+
+    let contenidoSalida = "";
+    for(let i = 0; i < resultadoCompresion.length; i++){
+        contenidoSalida += resultadoCompresion[i] + "<br>";
+    }
+    document.getElementById("salida").innerHTML = contenidoSalida;
+}
+</script>
+</body>
+</html>
